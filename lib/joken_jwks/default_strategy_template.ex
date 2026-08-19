@@ -179,9 +179,15 @@ defmodule JokenJwks.DefaultStrategyTemplate do
     GenServer.start_link(module, opts, name: module)
   end
 
+  # JOSE advertises symmetric and legacy algorithms too. A JWKS publishes public keys,
+  # so accepting an HMAC alg from one lets a fetched key be replayed as a shared secret,
+  # and RS1 is SHA-1.
+  @rejected_jws_algs ~w(HS256 HS384 HS512 Poly1305 RS1)
+
   @doc false
   def init(module, opts) do
     [_, _, {:jws, {:alg, algs}}] = JOSE.JWA.supports()
+    algs = Enum.reject(algs, &(&1 in @rejected_jws_algs))
 
     opts =
       opts

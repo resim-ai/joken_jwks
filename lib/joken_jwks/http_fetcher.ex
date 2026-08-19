@@ -10,8 +10,13 @@ defmodule JokenJwks.HttpFetcher do
 
   Options include:
 
-  - `:http_adapter` (default: `Tesla.Adapter.Hackney`)
+  - `:http_adapter` (default: `{Tesla.Adapter.Finch, name: JokenJwks.Finch}`)
   - `:http_middlewares`: a list of extra `Tesla.Middleware` configurations
+
+  The Finch adapter needs a running Finch instance. Either supervise one named
+  `JokenJwks.Finch`, or pass an instance you already run:
+
+      http_adapter: {Tesla.Adapter.Finch, name: MyApp.Finch}
 
   See our tests for an example of mocking the HTTP fetching.
   """
@@ -23,7 +28,8 @@ defmodule JokenJwks.HttpFetcher do
   This retries up to 10 times with a fixed delay of 500 ms until the server
   delivers an answer. We only perform a GET request that is idempotent.
 
-  We use `:hackney` as it validates certificates automatically.
+  We use `:finch`, which verifies certificates against the system CA store by
+  default via `:public_key.cacerts_get/0`.
   """
   @spec fetch_signers(binary, keyword()) :: {:ok, list} | {:error, atom} | no_return()
   def fetch_signers(url, opts) do
@@ -57,7 +63,7 @@ defmodule JokenJwks.HttpFetcher do
     end
   end
 
-  @default_adapter Tesla.Adapter.Hackney
+  @default_adapter {Tesla.Adapter.Finch, name: JokenJwks.Finch}
 
   defp new(opts) do
     adapter =
