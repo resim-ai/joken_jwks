@@ -12,11 +12,16 @@ defmodule JokenJwks.IntegrationTest do
     use JokenJwks.DefaultStrategyTemplate
   end
 
+  setup do
+    start_supervised!({Finch, name: JokenJwks.Finch})
+    :ok
+  end
+
   @tag :capture_log
   test "can parse Google's JWKS" do
     Strategy.start_link(
       jwks_url: @google_certs_url,
-      http_adapter: Tesla.Adapter.Hackney,
+      http_adapter: {Tesla.Adapter.Finch, name: JokenJwks.Finch},
       first_fetch_sync: true
     )
 
@@ -30,7 +35,7 @@ defmodule JokenJwks.IntegrationTest do
   test "can parse Microsoft's JWKS" do
     Strategy.start_link(
       jwks_url: @microsoft_certs_url,
-      http_adapter: Tesla.Adapter.Hackney,
+      http_adapter: {Tesla.Adapter.Finch, name: JokenJwks.Finch},
       first_fetch_sync: true,
       explicit_alg: "RS256"
     )
